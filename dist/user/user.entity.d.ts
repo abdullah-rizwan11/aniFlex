@@ -3,5 +3,6 @@ declare class User {
     fullname: string;
     email: string;
     password: string;
+    resetLink: string;
 }
 export default User;

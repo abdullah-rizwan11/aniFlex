@@ -19,6 +19,7 @@ const typeorm_2 = require("typeorm");
 const user_entity_1 = require("../user/user.entity");
 const bcrypt = require("bcryptjs");
 const jwt_1 = require("@nestjs/jwt");
+const crypto_1 = require("crypto");
 let AuthService = class AuthService {
     constructor(usersRepository, jwtService) {
         this.usersRepository = usersRepository;
@@ -33,7 +34,7 @@ let AuthService = class AuthService {
             password: hashedPassword,
         });
         await this.usersRepository.save(user);
-        const token = this.jwtService.sign({ id: user.fullname });
+        const token = this.jwtService.sign({ id: user.id });
         return { token };
     }
     async login(loginDto) {
@@ -48,8 +49,44 @@ let AuthService = class AuthService {
         if (!isPasswordMatched) {
             throw new common_1.UnauthorizedException('Invalid email or password');
         }
-        const token = this.jwtService.sign({ id: user.fullname });
+        const token = this.jwtService.sign({ id: user.id });
         return { token };
+    }
+    async forgot(forgotDto) {
+        const { email } = forgotDto;
+        const user = await this.usersRepository.findOne({
+            where: {
+                email
+            }
+        });
+        if (!user) {
+            throw new common_1.UnauthorizedException('Invalid email or password');
+        }
+        const tokenBytes = (0, crypto_1.randomBytes)(10);
+        const resetToken = tokenBytes.toString('hex');
+        const expiryTimestamp = Date.now() + 2 * 60 * 1000;
+        const tokenWithExpiry = `${resetToken}.${expiryTimestamp}`;
+        user.resetLink = tokenWithExpiry;
+        await this.usersRepository.save(user);
+        return tokenWithExpiry;
+    }
+    async reset(resetDto) {
+        const { token: resetLink, password } = resetDto;
+        console.log(password);
+        const isValidToken = this.validateResetToken(resetLink);
+        if (!isValidToken) {
+            throw new Error('Reset token is invalid or expired');
+        }
+        const user = await this.usersRepository.findOne({ where: { resetLink } });
+        user.password = await bcrypt.hash(password, 10);
+        user.resetLink = null;
+        await this.usersRepository.save(user);
+        return { message: "Password has been set successfully" };
+    }
+    validateResetToken(resetToken) {
+        const [token, expiryTimestampStr] = resetToken.split('.');
+        const expiryTimestamp = parseInt(expiryTimestampStr, 10);
+        return !isNaN(expiryTimestamp) && Date.now() <= expiryTimestamp;
     }
 };
 exports.AuthService = AuthService;

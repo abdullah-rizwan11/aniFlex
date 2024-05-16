@@ -21,10 +21,11 @@ let AppModule = class AppModule {
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [config_1.ConfigModule.forRoot({
+        imports: [
+            config_1.ConfigModule.forRoot({
                 isGlobal: true,
                 cache: true,
-                load: [config_2.DatabaseConfig]
+                load: [config_2.DatabaseConfig],
             }),
             typeorm_1.TypeOrmModule.forRootAsync({
                 imports: [config_1.ConfigModule],
@@ -33,7 +34,8 @@ exports.AppModule = AppModule = __decorate([
                 }),
                 inject: [config_1.ConfigService]
             }),
-            database_module_1.DatabaseModule, user_module_1.UserModule, auth_module_1.AuthModule],
+            database_module_1.DatabaseModule, user_module_1.UserModule, auth_module_1.AuthModule
+        ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })

@@ -9,6 +9,7 @@ import { config } from 'process';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import User from 'src/user/user.entity';
 import { JwtStrategy } from './jwt.strategy';
+
 @Module({
   imports: [
     PassportModule.register({defaultStrategy: 'jwt'}),

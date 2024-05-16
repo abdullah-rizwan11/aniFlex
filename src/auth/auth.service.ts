@@ -6,6 +6,10 @@ import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotDto } from './dto/forgot.dto';
+import { send } from 'process';
+import { randomBytes } from 'crypto';
+import { ResetDto } from './dto/reset.dto';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +33,7 @@ export class AuthService {
 
     await this.usersRepository.save(user);
 
-    const token = this.jwtService.sign({ id: user.fullname});
+    const token = this.jwtService.sign({ id: user.id});
 
     return { token };
   }
@@ -51,8 +55,51 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const token = this.jwtService.sign({ id: user.fullname });
+    const token = this.jwtService.sign({ id: user.id });
 
     return { token };
   }
+
+  async forgot(forgotDto : ForgotDto) {
+    const { email } = forgotDto
+    const user = await this.usersRepository.findOne({
+      where: {
+        email
+      }
+    })
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or password');
+    }
+
+    const tokenBytes = randomBytes(10);
+    const resetToken = tokenBytes.toString('hex');
+    const expiryTimestamp = Date.now() + 2 * 60 * 1000;
+    const tokenWithExpiry = `${resetToken}.${expiryTimestamp}`;
+    user.resetLink = tokenWithExpiry
+    await this.usersRepository.save(user)
+    return tokenWithExpiry;
+  }
+
+
+  async reset(resetDto : ResetDto) {
+    const {token : resetLink, password} = resetDto
+    const isValidToken = this.validateResetToken(resetLink);
+    if (!isValidToken) {
+      throw new Error('Reset token is invalid or expired');
+    }
+
+    const user = await this.usersRepository.findOne({ where: { resetLink } })
+    user.password = await bcrypt.hash(password, 10)
+    user.resetLink = null
+    await this.usersRepository.save(user)
+    return {message: "Password has been set successfully"}
+  }
+
+  private validateResetToken(resetToken: string): boolean {
+    const [token, expiryTimestampStr] = resetToken.split('.');
+    const expiryTimestamp = parseInt(expiryTimestampStr, 10);
+    return !isNaN(expiryTimestamp) && Date.now() <= expiryTimestamp;
+  }
+  
 }

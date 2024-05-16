@@ -8,11 +8,14 @@ import { AuthModule } from './auth/auth.module';
 import * as Joi from '@hapi/joi'
 import { DatabaseConfig } from './config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MailerModule } from '@nestjs-modules/mailer';
+
 @Module({
-  imports: [ConfigModule.forRoot({
+  imports: [
+    ConfigModule.forRoot({
     isGlobal: true,
     cache: true,
-    load: [DatabaseConfig]
+    load: [DatabaseConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -20,9 +23,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         ...configService.get('database')
       }),
       inject: [ConfigService]
-    })
-    ,
-
+    }),
     DatabaseModule, UserModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],

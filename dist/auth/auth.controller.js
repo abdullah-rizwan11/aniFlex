@@ -17,6 +17,8 @@ const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
 const signup_dto_1 = require("./dto/signup.dto");
+const forgot_dto_1 = require("./dto/forgot.dto");
+const reset_dto_1 = require("./dto/reset.dto");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -26,6 +28,12 @@ let AuthController = class AuthController {
     }
     login(loginDto) {
         return this.authService.login(loginDto);
+    }
+    forgot(forgotDto) {
+        return this.authService.forgot(forgotDto);
+    }
+    reset(resetDto) {
+        return this.authService.reset(resetDto);
     }
 };
 exports.AuthController = AuthController;
@@ -43,6 +51,20 @@ __decorate([
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('/forgot'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [forgot_dto_1.ForgotDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "forgot", null);
+__decorate([
+    (0, common_1.Post)('/reset'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [reset_dto_1.ResetDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "reset", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

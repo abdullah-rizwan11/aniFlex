@@ -13,6 +13,9 @@ class User {
 
     @Column()
     password: string
+
+    @Column({nullable: true})
+    resetLink: string
 }
 
 export default User;
