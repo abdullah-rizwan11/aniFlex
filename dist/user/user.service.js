@@ -14,7 +14,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
 const common_1 = require("@nestjs/common");
-const common_2 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const user_entity_1 = require("./user.entity");
 const typeorm_2 = require("typeorm");
@@ -23,18 +22,33 @@ let UserService = class UserService {
         this.userRepository = userRepository;
     }
     async getAllUsers() {
-        const users = await this.userRepository.find();
-        return users;
+        try {
+            const users = await this.userRepository.find();
+            if (!users)
+                throw new common_1.HttpException('Unable to get Users', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            return users;
+        }
+        catch (error) {
+            throw error;
+        }
     }
-    async getUserById(fullname) {
-        const user = await this.userRepository.findOne({
-            where: {
-                fullname: fullname
-            }
-        });
-        if (user)
+    async getUserByEmail(email) {
+        try {
+            const user = await this.userRepository.findOne({
+                where: {
+                    email
+                }
+            });
+            if (!user)
+                throw new common_1.HttpException('User not found', common_1.HttpStatus.NOT_FOUND);
             return user;
-        throw new common_2.NotFoundException('User not found');
+        }
+        catch (error) {
+            if (error.status === common_1.HttpStatus.NOT_FOUND) {
+                throw error;
+            }
+            throw new common_1.HttpException('Unable to fetch user', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     async createUser(createUserDto) {
         const newUser = await this.userRepository.create(createUserDto);
@@ -45,16 +59,23 @@ let UserService = class UserService {
         });
         return newUser;
     }
-    async deleteByName(name) {
-        const user = await this.userRepository.findOne({
-            where: {
-                fullname: name
+    async deleteByEmail(email) {
+        try {
+            const user = await this.userRepository.findOne({
+                where: {
+                    email
+                }
+            });
+            if (!user)
+                throw new common_1.HttpException("User not found", common_1.HttpStatus.NOT_FOUND);
+            return await this.userRepository.remove(user);
+        }
+        catch (error) {
+            if (error.status === common_1.HttpStatus.NOT_FOUND) {
+                throw error;
             }
-        });
-        if (!user)
-            return null;
-        await this.userRepository.remove(user);
-        return user;
+            throw new common_1.HttpException("Error fetching user", common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 };
 exports.UserService = UserService;

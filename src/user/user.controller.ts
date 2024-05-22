@@ -18,9 +18,9 @@ export class UserController {
     }
 
     @Get(':name')
-    async getUserById(@Param('name') name: string): Promise<User> {
+    async getUserByEmail(@Param('name') email: string): Promise<User> {
         try {
-            const user = await this.userService.getUserById(name)
+            const user = await this.userService.getUserByEmail(email)
             if (!user) {
                 throw new HttpException('User not found', HttpStatus.NOT_FOUND)
             }
@@ -45,9 +45,9 @@ export class UserController {
     }
 
     @Delete(':name')
-    async deleteByName(@Param('name') name : string): Promise<User> {
+    async deleteByEmail(@Param('name') email : string): Promise<User> {
         try {
-            const user = this.userService.deleteByName(name)
+            const user = this.userService.deleteByEmail(email)
             if (!user) {
                 throw new HttpException('User not found', HttpStatus.NOT_FOUND)
             }

@@ -79,7 +79,12 @@ export class AuthService {
     const expiryTimestamp = Date.now() + 2 * 60 * 1000;
     const tokenWithExpiry = `${resetToken}.${expiryTimestamp}`;
     user.resetLink = tokenWithExpiry
-    await this.usersRepository.save(user)
+    try {
+      await this.usersRepository.save(user)
+    } catch(error) {
+      throw new HttpException('Unable to update user data', HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+    
     return tokenWithExpiry;
   }
 
@@ -93,7 +98,12 @@ export class AuthService {
     const user = await this.usersRepository.findOne({ where: { resetLink } })
     user.password = await bcrypt.hash(password, 10)
     user.resetLink = null
-    await this.usersRepository.save(user)
+    try {
+      await this.usersRepository.save(user)
+    } catch (err) {
+      throw new HttpException('Unable to store reset link', HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+    
     return {message: "Password has been set successfully"}
   }
 

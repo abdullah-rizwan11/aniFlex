@@ -30,9 +30,9 @@ let UserController = class UserController {
             throw new common_1.HttpException('Error fetching users', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async getUserById(name) {
+    async getUserByEmail(email) {
         try {
-            const user = await this.userService.getUserById(name);
+            const user = await this.userService.getUserByEmail(email);
             if (!user) {
                 throw new common_1.HttpException('User not found', common_1.HttpStatus.NOT_FOUND);
             }
@@ -54,9 +54,9 @@ let UserController = class UserController {
             throw new common_1.HttpException('Error creating user', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    async deleteByName(name) {
+    async deleteByEmail(email) {
         try {
-            const user = this.userService.deleteByName(name);
+            const user = this.userService.deleteByEmail(email);
             if (!user) {
                 throw new common_1.HttpException('User not found', common_1.HttpStatus.NOT_FOUND);
             }
@@ -83,7 +83,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], UserController.prototype, "getUserById", null);
+], UserController.prototype, "getUserByEmail", null);
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
@@ -98,7 +98,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], UserController.prototype, "deleteByName", null);
+], UserController.prototype, "deleteByEmail", null);
 exports.UserController = UserController = __decorate([
     (0, common_1.Controller)('user'),
     __metadata("design:paramtypes", [user_service_1.UserService])
