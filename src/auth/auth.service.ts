@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from 'src/user/user.entity';
@@ -12,7 +17,6 @@ import { ResetDto } from './dto/reset.dto';
 
 @Injectable()
 export class AuthService {
-  
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
@@ -30,15 +34,17 @@ export class AuthService {
       });
 
       const saved = await this.usersRepository.save(user);
-      const token = this.jwtService.sign({ id: user.id}, {expiresIn: '1h'});
+      const token = this.jwtService.sign({ id: user.id }, { expiresIn: '1h' });
       return { token };
-    }
-    catch (error) {
+    } catch (error) {
       if (error.code === '23505') {
         throw new HttpException('Email already exists', HttpStatus.CONFLICT);
       }
-      console.log(error)
-      throw new HttpException('Error signing up', HttpStatus.INTERNAL_SERVER_ERROR);
+      console.log(error);
+      throw new HttpException(
+        'Error signing up',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -58,17 +64,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const token = this.jwtService.sign({ id: user.id }, {expiresIn: '1h'});
+    const token = this.jwtService.sign({ id: user.id }, { expiresIn: '1h' });
     return { token };
   }
 
-  async forgot(forgotDto : ForgotDto) {
-    const { email } = forgotDto
+  async forgot(forgotDto: ForgotDto) {
+    const { email } = forgotDto;
     const user = await this.usersRepository.findOne({
       where: {
-        email
-      }
-    })
+        email,
+      },
+    });
 
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
@@ -78,33 +84,39 @@ export class AuthService {
     const resetToken = tokenBytes.toString('hex');
     const expiryTimestamp = Date.now() + 2 * 60 * 1000;
     const tokenWithExpiry = `${resetToken}.${expiryTimestamp}`;
-    user.resetLink = tokenWithExpiry
+    user.resetLink = tokenWithExpiry;
     try {
-      await this.usersRepository.save(user)
-    } catch(error) {
-      throw new HttpException('Unable to update user data', HttpStatus.INTERNAL_SERVER_ERROR)
+      await this.usersRepository.save(user);
+    } catch (error) {
+      throw new HttpException(
+        'Unable to update user data',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
-    
+
     return tokenWithExpiry;
   }
 
-  async reset(resetDto : ResetDto) {
-    const {token : resetLink, password} = resetDto
+  async reset(resetDto: ResetDto) {
+    const { token: resetLink, password } = resetDto;
     const isValidToken = this.validateResetToken(resetLink);
     if (!isValidToken) {
       throw new Error('Reset token is invalid or expired');
     }
 
-    const user = await this.usersRepository.findOne({ where: { resetLink } })
-    user.password = await bcrypt.hash(password, 10)
-    user.resetLink = null
+    const user = await this.usersRepository.findOne({ where: { resetLink } });
+    user.password = await bcrypt.hash(password, 10);
+    user.resetLink = null;
     try {
-      await this.usersRepository.save(user)
+      await this.usersRepository.save(user);
     } catch (err) {
-      throw new HttpException('Unable to store reset link', HttpStatus.INTERNAL_SERVER_ERROR)
+      throw new HttpException(
+        'Unable to store reset link',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
-    
-    return {message: "Password has been set successfully"}
+
+    return { message: 'Password has been set successfully' };
   }
 
   private validateResetToken(resetToken: string): boolean {
