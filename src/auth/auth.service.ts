@@ -102,5 +102,4 @@ export class AuthService {
     const expiryTimestamp = parseInt(expiryTimestampStr, 10);
     return !isNaN(expiryTimestamp) && Date.now() <= expiryTimestamp;
   }
-  
 }

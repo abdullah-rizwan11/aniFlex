@@ -53,7 +53,7 @@ export class UserController {
             }
             return user
         } catch(error) {
-            if (error.statue === HttpStatus.NOT_FOUND) {
+            if (error.status === HttpStatus.NOT_FOUND) {
                 throw error
             }
             throw new HttpException('Error deleting User', HttpStatus.INTERNAL_SERVER_ERROR)

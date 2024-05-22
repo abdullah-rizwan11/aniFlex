@@ -63,7 +63,7 @@ let UserController = class UserController {
             return user;
         }
         catch (error) {
-            if (error.statue === common_1.HttpStatus.NOT_FOUND) {
+            if (error.status === common_1.HttpStatus.NOT_FOUND) {
                 throw error;
             }
             throw new common_1.HttpException('Error deleting User', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
