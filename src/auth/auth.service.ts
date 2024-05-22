@@ -28,17 +28,18 @@ export class AuthService {
         email,
         password: hashedPassword,
       });
-      await this.usersRepository.save(user);
-      const token = this.jwtService.sign({ id: user.id});
+
+      const saved = await this.usersRepository.save(user);
+      const token = this.jwtService.sign({ id: user.id}, {expiresIn: '1h'});
       return { token };
     }
     catch (error) {
       if (error.code === '23505') {
         throw new HttpException('Email already exists', HttpStatus.CONFLICT);
       }
+      console.log(error)
       throw new HttpException('Error signing up', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    
   }
 
   async login(loginDto: LoginDto): Promise<{ token: string }> {
@@ -57,7 +58,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const token = this.jwtService.sign({ id: user.id });
+    const token = this.jwtService.sign({ id: user.id }, {expiresIn: '1h'});
     return { token };
   }
 

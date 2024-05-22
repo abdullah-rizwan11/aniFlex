@@ -26,16 +26,25 @@ let AuthService = class AuthService {
         this.jwtService = jwtService;
     }
     async signUp(signUpDto) {
-        const { fullname, email, password } = signUpDto;
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await this.usersRepository.create({
-            fullname,
-            email,
-            password: hashedPassword,
-        });
-        await this.usersRepository.save(user);
-        const token = this.jwtService.sign({ id: user.id });
-        return { token };
+        try {
+            const { fullname, email, password } = signUpDto;
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const user = await this.usersRepository.create({
+                fullname,
+                email,
+                password: hashedPassword,
+            });
+            const saved = await this.usersRepository.save(user);
+            const token = this.jwtService.sign({ id: user.id }, { expiresIn: '1h' });
+            return { token };
+        }
+        catch (error) {
+            if (error.code === '23505') {
+                throw new common_1.HttpException('Email already exists', common_1.HttpStatus.CONFLICT);
+            }
+            console.log(error);
+            throw new common_1.HttpException('Error signing up', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     async login(loginDto) {
         const { email, password } = loginDto;
@@ -49,7 +58,7 @@ let AuthService = class AuthService {
         if (!isPasswordMatched) {
             throw new common_1.UnauthorizedException('Invalid email or password');
         }
-        const token = this.jwtService.sign({ id: user.id });
+        const token = this.jwtService.sign({ id: user.id }, { expiresIn: '1h' });
         return { token };
     }
     async forgot(forgotDto) {
@@ -72,7 +81,6 @@ let AuthService = class AuthService {
     }
     async reset(resetDto) {
         const { token: resetLink, password } = resetDto;
-        console.log(password);
         const isValidToken = this.validateResetToken(resetLink);
         if (!isValidToken) {
             throw new Error('Reset token is invalid or expired');
@@ -84,7 +92,7 @@ let AuthService = class AuthService {
         return { message: "Password has been set successfully" };
     }
     validateResetToken(resetToken) {
-        const [token, expiryTimestampStr] = resetToken.split('.');
+        const [, expiryTimestampStr] = resetToken.split('.');
         const expiryTimestamp = parseInt(expiryTimestampStr, 10);
         return !isNaN(expiryTimestamp) && Date.now() <= expiryTimestamp;
     }

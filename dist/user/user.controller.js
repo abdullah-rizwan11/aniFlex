@@ -22,20 +22,52 @@ let UserController = class UserController {
         this.userService = userService;
     }
     async getAllUsers() {
-        const users = await this.userService.getAllUsers();
-        return users;
+        try {
+            const users = await this.userService.getAllUsers();
+            return users;
+        }
+        catch (error) {
+            throw new common_1.HttpException('Error fetching users', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     async getUserById(name) {
-        const user = await this.userService.getUserById(name);
-        return user;
+        try {
+            const user = await this.userService.getUserById(name);
+            if (!user) {
+                throw new common_1.HttpException('User not found', common_1.HttpStatus.NOT_FOUND);
+            }
+            return user;
+        }
+        catch (error) {
+            if (error.status === common_1.HttpStatus.NOT_FOUND) {
+                throw error;
+            }
+            throw new common_1.HttpException('Error fetching User', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     async createUser(createUserDto) {
-        const newUser = await this.userService.createUser(createUserDto);
-        return newUser;
+        try {
+            const newUser = await this.userService.createUser(createUserDto);
+            return newUser;
+        }
+        catch (error) {
+            throw new common_1.HttpException('Error creating user', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     async deleteByName(name) {
-        const user = this.userService.deleteByName(name);
-        return user;
+        try {
+            const user = this.userService.deleteByName(name);
+            if (!user) {
+                throw new common_1.HttpException('User not found', common_1.HttpStatus.NOT_FOUND);
+            }
+            return user;
+        }
+        catch (error) {
+            if (error.statue === common_1.HttpStatus.NOT_FOUND) {
+                throw error;
+            }
+            throw new common_1.HttpException('Error deleting User', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 };
 exports.UserController = UserController;

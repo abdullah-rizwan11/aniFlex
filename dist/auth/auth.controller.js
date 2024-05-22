@@ -23,17 +23,41 @@ let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    signUp(signUpDto) {
-        return this.authService.signUp(signUpDto);
+    async signUp(signUpDto) {
+        try {
+            const token = await this.authService.signUp(signUpDto);
+            return token;
+        }
+        catch (error) {
+            throw error;
+        }
     }
-    login(loginDto) {
-        return this.authService.login(loginDto);
+    async login(loginDto) {
+        try {
+            const token = this.authService.login(loginDto);
+            return token;
+        }
+        catch (error) {
+            throw new common_1.HttpException('Error Logging In', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-    forgot(forgotDto) {
-        return this.authService.forgot(forgotDto);
+    async forgot(forgotDto) {
+        try {
+            const token = await this.authService.forgot(forgotDto);
+            return token;
+        }
+        catch (error) {
+            throw new common_1.HttpException('Error sending password reset link', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-    reset(resetDto) {
-        return this.authService.reset(resetDto);
+    async reset(resetDto) {
+        try {
+            const message = await this.authService.reset(resetDto);
+            return message;
+        }
+        catch (error) {
+            throw error;
+        }
     }
 };
 exports.AuthController = AuthController;
@@ -56,14 +80,14 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [forgot_dto_1.ForgotDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "forgot", null);
 __decorate([
     (0, common_1.Post)('/reset'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [reset_dto_1.ResetDto]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], AuthController.prototype, "reset", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
