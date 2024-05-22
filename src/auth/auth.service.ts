@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from 'src/user/user.entity';
@@ -7,7 +7,6 @@ import { JwtService } from '@nestjs/jwt';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotDto } from './dto/forgot.dto';
-import { send } from 'process';
 import { randomBytes } from 'crypto';
 import { ResetDto } from './dto/reset.dto';
 
@@ -21,26 +20,29 @@ export class AuthService {
   ) {}
 
   async signUp(signUpDto: SignUpDto): Promise<{ token: string }> {
-    const { fullname, email, password } = signUpDto;
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await this.usersRepository.create({
-      fullname,
-      email,
-      password: hashedPassword,
-    });
-
-    await this.usersRepository.save(user);
-
-    const token = this.jwtService.sign({ id: user.id});
-
-    return { token };
+    try {
+      const { fullname, email, password } = signUpDto;
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = await this.usersRepository.create({
+        fullname,
+        email,
+        password: hashedPassword,
+      });
+      await this.usersRepository.save(user);
+      const token = this.jwtService.sign({ id: user.id});
+      return { token };
+    }
+    catch (error) {
+      if (error.code === '23505') {
+        throw new HttpException('Email already exists', HttpStatus.CONFLICT);
+      }
+      throw new HttpException('Error signing up', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    
   }
 
   async login(loginDto: LoginDto): Promise<{ token: string }> {
     const { email, password } = loginDto;
-
     const user = await this.usersRepository.findOne({
       where: { email },
     });
@@ -56,7 +58,6 @@ export class AuthService {
     }
 
     const token = this.jwtService.sign({ id: user.id });
-
     return { token };
   }
 
@@ -81,7 +82,6 @@ export class AuthService {
     return tokenWithExpiry;
   }
 
-
   async reset(resetDto : ResetDto) {
     const {token : resetLink, password} = resetDto
     const isValidToken = this.validateResetToken(resetLink);
@@ -97,7 +97,7 @@ export class AuthService {
   }
 
   private validateResetToken(resetToken: string): boolean {
-    const [token, expiryTimestampStr] = resetToken.split('.');
+    const [, expiryTimestampStr] = resetToken.split('.');
     const expiryTimestamp = parseInt(expiryTimestampStr, 10);
     return !isNaN(expiryTimestamp) && Date.now() <= expiryTimestamp;
   }
